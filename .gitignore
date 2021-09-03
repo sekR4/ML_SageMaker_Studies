@@ -1,2 +1,4 @@
 .github/**
-.ipynb_checkpoints
+.ipynb_checkpoints/
+Population_Segmentation/.ipynb_checkpoints/*
+Population_Segmentation/.ipynb_checkpoints/Pop_Segmentation_Exercise-checkpoint.ipynb
