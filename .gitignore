@@ -1,3 +1,4 @@
+env.sh
 .github/**
 .ipynb_checkpoints/
 Population_Segmentation/.ipynb_checkpoints/*
