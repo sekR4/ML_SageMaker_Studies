@@ -187,7 +187,8 @@ if __name__ == "__main__":
     save_model_params(model, args.model_dir)
 
     optimizer = optim.Adam(model.parameters(), args.lr)
-    criterion = nn.BCEWithLogitsLoss()
+    criterion = nn.BCELoss()
+    # criterion = nn.BCEWithLogitsLoss()
 
     # Trains the model (given line of code, which calls the above training function)
     # This function *also* saves the model state dictionary
