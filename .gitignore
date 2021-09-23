@@ -7,3 +7,4 @@ env.sh
 Population_Segmentation/.ipynb_checkpoints/*
 Population_Segmentation/.ipynb_checkpoints/Pop_Segmentation_Exercise-checkpoint.ipynb
 Time_Series_Forecasting/household_power_consumption.txt
+Time_Series_Forecasting/household-electric-power-consumption.zip
