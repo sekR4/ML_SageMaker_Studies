@@ -1,3 +1,4 @@
+Time_Series_Forecasting/__pycache__
 Payment_Fraud_Detection/creditcard.csv
 Payment_Fraud_Detection/creditcardfraud.zip
 env.sh
@@ -5,3 +6,4 @@ env.sh
 .ipynb_checkpoints/
 Population_Segmentation/.ipynb_checkpoints/*
 Population_Segmentation/.ipynb_checkpoints/Pop_Segmentation_Exercise-checkpoint.ipynb
+Time_Series_Forecasting/household_power_consumption.txt
