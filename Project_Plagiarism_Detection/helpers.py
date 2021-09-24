@@ -1,6 +1,9 @@
-import re
-import pandas as pd
 import operator
+import re
+
+import numpy as np
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
 
 # Add 'datatype' column that indicates if the record is original wiki answer as 0, training data 1, test data 2, onto
 # the dataframe - uses stratified random sampling (with seed) to sample by task & plagiarism amount
@@ -148,17 +151,15 @@ def create_text_column(df, file_directory="data/"):
     return text_df
 
 
-# NOTE: maybe there's a numpy way of doing this.
-# Also see:  https://github.com/Thijsvanede/metrics/blob/master/distance_metrics/lcs.py
-def lcs_normalized(a: str, b: str, verbose=False) -> float:
+def lcs_normalized(a: str, s: str, verbose=False) -> float:
     """Calculates normalized longest common subsequence between two sequences.
 
     Parameters
     ----------
     a : str
-        First sequence (matrix rows)
+        First sequence, answer (matrix rows)
     b : str
-        Second sequence (matrix columns)
+        Second sequence, source (matrix columns)
     verbose : bool, optional
         Prints out sequence matrices in different states, by default False
 
@@ -167,32 +168,63 @@ def lcs_normalized(a: str, b: str, verbose=False) -> float:
     float
         normalized longest common subsequence
     """
-    a, b = clean_text(a).split(), clean_text(b).split()
-    m, n = len(a), len(b)
+    a_text, s_text = a.split(), s.split()
+    len_a, len_s = len(a_text), len(s_text)
 
     # 1. Create empty matrix
-    t = [[0 for i in range(n + 1)] for j in range(m + 1)]
-    if verbose:
-        print("t 0", *t, "", sep="\n")
+    word_matrix = np.zeros((len_s + 1, len_a + 1), dtype=int)
 
     # 2. Fill matrix
-    for i in range(m + 1):
-        for j in range(n + 1):
-            if i == 0 or j == 0:
-                t[i][j] = 0
-    for i in range(1, m + 1):
-        for j in range(1, n + 1):
-            if a[i - 1] == b[j - 1]:
-                t[i][j] = 1 + t[i - 1][j - 1]
+    for s_idx, s_word in enumerate(s_text, 1):
+        for a_idx, a_word in enumerate(a_text, 1):
+            if s_word == a_word:
+                word_matrix[s_idx][a_idx] = word_matrix[s_idx - 1][a_idx - 1] + 1
             else:
-                t[i][j] = max(t[i - 1][j], t[i][j - 1])
-    if verbose:
-        print("t 1", *t, "", sep="\n")
+                word_matrix[s_idx][a_idx] = max(
+                    word_matrix[s_idx - 1][a_idx], word_matrix[s_idx][a_idx - 1]
+                )
 
-    return t[-1][-1] / n
+    return word_matrix[len_s][len_a] / len_a
+
+
+def calculate_containment(df: pd.DataFrame, n: int, answer_filename: str) -> float:
+    """Calculates the containment between a given answer text and its associated source
+    text. This function creates a count of ngrams (of a size, n) for each text file in
+    our data.Then calculates the containment by finding the ngram count for a given
+    answer text, and its associated source text, and calculating the normalized
+    intersection of those counts.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe with columns: 'File', 'Task', 'Category', 'Class', 'Text', 'Datatype'
+    n : int
+        An integer that defines the ngram size
+    answer_filename : str
+        A filename for an answer text in the df, ex. 'g0pB_taskd.txt'
+
+    Returns
+    -------
+    float
+        A single containment value that represents the similarity between an answer
+        text and its source text.
+    """
+    # 1. Get student answer 'a'
+    a = df[df.File == answer_filename].Text.iloc[0]
+
+    # 2. Get wikipedia source 's'
+    f1 = df.Datatype == "orig"
+    f2 = df.File.str.split("_").apply(lambda x: x[-1]) == answer_filename.split("_")[-1]
+    s = df[f1 & f2].Text.iloc[0]
+
+    # 3. Create N-gram
+    counts = CountVectorizer(ngram_range=(n, n))
+    ngram_array = counts.fit_transform([a, s]).toarray()
+
+    # 4. Calculate containment
+    intersection = sum([min(i, j) for i, j in zip(ngram_array[0], ngram_array[1])])
+    return intersection / sum(ngram_array[0])
 
 
 if __name__ == "__main__":
-    t_a = "Deep learning is about finding patterns"
-    t_b = "Machine learning helps you in finding patterns"
-    print(lcs_normalized(t_a, t_b))
+    pass
