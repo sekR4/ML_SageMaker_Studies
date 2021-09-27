@@ -5,11 +5,16 @@ import os
 import pandas as pd
 
 # sklearn.externals.joblib is deprecated in 0.21 and will be removed in 0.23.
-from sklearn.externals import joblib
+# from sklearn.externals import joblib
 
-# Import joblib package directly
-# import joblib
-# FIXME: ModuleNotFoundError: No module named 'joblib'
+import joblib
+
+# NOTE: default sklearn version on SageMaker is too old and will throw an error:
+# ModuleNotFoundError: No module named 'joblib'
+# So specify the version when you instantiate the model
+# via 'framework_version="0.23-1"'
+
+
 from sklearn.ensemble import ExtraTreesClassifier
 
 
@@ -42,7 +47,11 @@ if __name__ == "__main__":
         "--output-data-dir", type=str, default=os.environ["SM_OUTPUT_DATA_DIR"]
     )
     parser.add_argument("--model-dir", type=str, default=os.environ["SM_MODEL_DIR"])
-    parser.add_argument("--data-dir", type=str, default=os.environ["SM_CHANNEL_TRAIN"])
+
+    # QUICKFIX: KeyError: 'SM_CHANNEL_TRAIN'
+    parser.add_argument(
+        "--data-dir", type=str, default=os.environ["SM_CHANNEL_TRAINING"]
+    )
 
     ## TODO: Add any additional arguments that you will need to pass into your model
 
